@@ -1,11 +1,12 @@
 package com.example.usuarioapi.controller;
 
 import com.example.usuarioapi.model.Usuario;
-import com.example.usuarioapi.repository.UserRepository;
+import com.example.usuarioapi.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -13,47 +14,35 @@ import java.util.UUID;
 public class UserController {
 
     @Autowired
-    private UserRepository userRepository;
+    private UsuarioService usuarioService;
 
     @GetMapping
     public List<Usuario> getAllUsers() {
-        return userRepository.findAll();
+        return usuarioService.listarTodos();
     }
 
     @PostMapping
     public Usuario createUser(@RequestBody Usuario user) {
-        return userRepository.save(user);
+        return usuarioService.criarUsuario(user);
     }
 
     @GetMapping("/{id}")
     public Usuario getUserById(@PathVariable UUID id) {
-        return userRepository.findById(id).orElseThrow();
+        return usuarioService.buscarPorId(id).orElseThrow();
     }
 
     @PutMapping("/{id}")
     public Usuario updateUser(@PathVariable UUID id, @RequestBody Usuario newUser) {
-        return userRepository.findById(id).map(user -> {
-            user.setName(newUser.getName());
-            user.setLastName(newUser.getLastName());
-            user.setEmail(newUser.getEmail());
-            user.setPassword(newUser.getPassword());
-            return userRepository.save(user);
-        }).orElseThrow();
+        return usuarioService.atualizarUsuario(id, newUser);
     }
 
     @PatchMapping("/{id}")
-    public Usuario patchUser(@PathVariable UUID id, @RequestBody Usuario userUpdates) {
-        return userRepository.findById(id).map(user -> {
-            if (userUpdates.getName() != null) user.setName(userUpdates.getName());
-            if (userUpdates.getLastName() != null) user.setLastName(userUpdates.getLastName());
-            if (userUpdates.getEmail() != null) user.setEmail(userUpdates.getEmail());
-            if (userUpdates.getPassword() != null) user.setPassword(userUpdates.getPassword());
-            return userRepository.save(user);
-        }).orElseThrow();
+    public Usuario patchUser(@PathVariable UUID id, @RequestBody Map<String, Object> updates) {
+        return usuarioService.atualizarParcial(id, updates);
     }
 
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable UUID id) {
-        userRepository.deleteById(id);
+        usuarioService.deletarUsuario(id);
     }
 }
