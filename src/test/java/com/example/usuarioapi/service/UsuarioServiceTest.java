@@ -94,9 +94,7 @@ class UsuarioServiceTest {
         atualizado.setEmail("novo@email.com");
         atualizado.setPassword("senha123");
 
-        // Simula que encontrou o usuário
         when(userRepository.findById(id)).thenReturn(Optional.of(existente));
-        // Simula que salvou o usuário
         when(userRepository.save(existente)).thenReturn(existente);
 
         Usuario resultado = usuarioService.atualizarUsuario(id, atualizado);
@@ -116,30 +114,9 @@ class UsuarioServiceTest {
 
         when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-        // Espera que uma exceção seja lançada
         assertThrows(NoSuchElementException.class, () -> {
             usuarioService.atualizarUsuario(id, atualizado);
         });
-    }
-
-    @Test
-    void deveAtualizarParcialmenteUsuario() {
-        UUID id = UUID.randomUUID();
-        Usuario existente = new Usuario();
-        existente.setId(id);
-
-        // Simula atualizações parciais
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("name", "NovoNome");
-        updates.put("email", "novo@email.com");
-
-        when(userRepository.findById(id)).thenReturn(Optional.of(existente));
-        when(userRepository.save(existente)).thenReturn(existente);
-
-        Usuario resultado = usuarioService.atualizarParcial(id, updates);
-
-        assertEquals("NovoNome", resultado.getName());
-        assertEquals("novo@email.com", resultado.getEmail());
     }
 
     @Test
@@ -155,6 +132,57 @@ class UsuarioServiceTest {
     }
 
     @Test
+    void deveAtualizarCampoLastNameParcialmente() {
+        UUID id = UUID.randomUUID();
+        Usuario existente = new Usuario();
+        existente.setId(id);
+
+        Map<String, Object> updates = Map.of("lastName", "NovoSobrenome");
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(existente));
+        when(userRepository.save(existente)).thenReturn(existente);
+
+        Usuario resultado = usuarioService.atualizarParcial(id, updates);
+
+        assertEquals("NovoSobrenome", resultado.getLastName());
+    }
+
+    @Test
+    void deveAtualizarParcialmenteUsuario() {
+        UUID id = UUID.randomUUID();
+        Usuario existente = new Usuario();
+        existente.setId(id);
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("name", "NovoNome");
+        updates.put("email", "novo@email.com");
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(existente));
+        when(userRepository.save(existente)).thenReturn(existente);
+
+        Usuario resultado = usuarioService.atualizarParcial(id, updates);
+
+        assertEquals("NovoNome", resultado.getName());
+        assertEquals("novo@email.com", resultado.getEmail());
+    }
+
+    @Test
+    void deveAtualizarCampoPasswordParcialmente() {
+        UUID id = UUID.randomUUID();
+        Usuario existente = new Usuario();
+        existente.setId(id);
+
+        Map<String, Object> updates = Map.of("password", "novaSenha123");
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(existente));
+        when(userRepository.save(existente)).thenReturn(existente);
+
+        Usuario resultado = usuarioService.atualizarParcial(id, updates);
+
+        assertEquals("novaSenha123", resultado.getPassword());
+    }
+
+    @Test
     void deveDeletarUsuario() {
         UUID id = UUID.randomUUID();
 
@@ -162,4 +190,21 @@ class UsuarioServiceTest {
 
         verify(userRepository, times(1)).deleteById(id);
     }
+
+    @Test
+    void deveLancarExcecaoQuandoCampoInvalidoEmAtualizacaoParcial() {
+        UUID id = UUID.randomUUID();
+        Usuario existente = new Usuario();
+        existente.setId(id);
+
+        // Campo inválido:
+        Map<String, Object> updates = Map.of("campo default", "123456789");
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(existente));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            usuarioService.atualizarParcial(id, updates);
+        });
+    }
+
 }
